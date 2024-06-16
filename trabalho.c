@@ -5,7 +5,6 @@
 #include <time.h>
 #include "process_list.h"
 
-typedef unsigned physical_memory;
 typedef unsigned page;
 
 const unsigned MAX_SIZE = 1024;
@@ -16,12 +15,12 @@ unsigned process_size = 1024;
 processes *process_list;
 
 // byte arrays
-physical_memory *memory;
+byte *memory;
 
 struct FreeFrames
 {
     unsigned count;
-    char *frames;
+    byte *frames;
 };
 
 struct FreeFrames free_frames;
@@ -46,11 +45,11 @@ int validate_input(char *name, unsigned max_size)
     return 1;
 }
 
-void visualize_memory(unsigned *memory_to_show, int size)
+void visualize_memory(byte *memory_to_show, unsigned size)
 {
     printf("Memory visualization:\n\n");
-    int page_count = 0;
-    for (int i = 0; i < size; i++)
+    unsigned page_count = 0;
+    for (unsigned i = 0; i < size; i++)
     {
         if (i % page_size == 0)
         {
@@ -110,7 +109,7 @@ void create_process()
     }
 
     srand(time(NULL));
-    unsigned *content = (unsigned *)malloc(size * sizeof(unsigned));
+    byte *content = (byte *)malloc(size * sizeof(byte));
     for (int i = 0; i < size; i++)
     {
         content[i] = rand() % 100;
@@ -141,7 +140,8 @@ void create_process()
     }
     insert(process_list, new_process);
 
-    printf("Process %d created with size %d\n", pid, size);
+    printf("Process %d created with size %d\n\n", pid, size);
+    sleep(1);
 }
 
 void visualize_page_table(unsigned int *page_table)
@@ -156,6 +156,22 @@ void visualize_page_table(unsigned int *page_table)
         printf("|      %5d      |      %5d      |\n", i, page_table[i]);
     }
     printf("+----------------+----------------+\n");
+}
+
+void visualize_process_list(processes *list)
+{
+    node *current = list->head->next;
+
+    printf("Process list visualization\n");
+    printf("+-----+------+------------+\n");
+    printf("| PID | Size | Page Count |\n");
+    printf("+-----+------+------------+\n");
+    while (current != NULL)
+    {
+        printf("| %3d | %4d |       %4d |\n", current->process->pid, current->process->size, current->process->size / page_size);
+        current = current->next;
+    }
+    printf("+-----+------+------------+\n");
 }
 
 int main(int argc, char *argv[])
@@ -180,15 +196,15 @@ int main(int argc, char *argv[])
     if (!validate_input("process", process_size))
         exit(0);
 
-    memory = (physical_memory *)malloc(memory_size);
+    memory = (byte *)malloc(memory_size);
 
-    for (unsigned i = 0; i < memory_size / sizeof(physical_memory); i++)
+    for (char i = 0; i < memory_size; i++)
     {
         memory[i] = 0;
     }
 
     free_frames.count = memory_size / page_size;
-    free_frames.frames = (char *)malloc(free_frames.count);
+    free_frames.frames = (byte *)malloc(free_frames.count);
 
     process_list = (processes *)malloc(sizeof(processes));
     node *new_node = (node *)malloc(sizeof(node));
@@ -202,31 +218,42 @@ int main(int argc, char *argv[])
         page_table[i] = rand() % 100; // Simulated page number/value
     }
 
-    printf("Choose an option \n");
-    printf("Visualize memory [1]\n");
-    printf("Create process [2]\n");
-    printf("Visualize page table [3]\n");
-    printf("Visualize process list [4]\n");
+    while (1)
+    {
+        printf("Choose an option \n");
+        printf("Visualize memory [1]\n");
+        printf("Create process [2]\n");
+        printf("Visualize page table [3]\n");
+        printf("Visualize process list [4]\n");
+        printf("Exit [5]\n");
 
-    int option;
-    scanf("%d", &option);
+        int option;
+        scanf("%d", &option);
 
-    if (option == 1)
-    {
-        visualize_memory(memory, memory_size);
+        if (option == 1)
+        {
+            visualize_memory(memory, memory_size);
+        }
+        else if (option == 2)
+        {
+            create_process();
+        }
+        else if (option == 3)
+        {
+            visualize_page_table(page_table);
+        }
+        else if (option == 4)
+        {
+            visualize_process_list(process_list);
+        }
+        else if (option == 5)
+        {
+            break;
+        }
+        else
+        {
+            printf("Invalid option\n");
+        }
     }
-    else if (option == 2)
-    {
-        create_process();
-    }
-    else if (option == 3)
-    {
-        visualize_page_table(page_table);
-    }
-    else
-    {
-        printf("Invalid option\n");
-    }
-
     return 0;
 }

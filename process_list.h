@@ -1,7 +1,7 @@
 #ifndef process_list_h
-#define PROCESS_LIST_H
+#define process_list_h
 
-typedef unsigned logical_memory;
+typedef unsigned char byte;
 
 struct Node
 {
@@ -13,7 +13,7 @@ struct Process
     unsigned pid;
     unsigned size;
     unsigned *page_table;
-    logical_memory *content;
+    byte *content;
 };
 
 struct List
