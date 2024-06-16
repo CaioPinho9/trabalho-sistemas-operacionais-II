@@ -12,6 +12,8 @@ int page_size = 1024;
 int memory_size = 1024;
 int process_size = 1024;
 
+processes *process_list;
+
 // byte arrays
 physical_memory *memory;
 

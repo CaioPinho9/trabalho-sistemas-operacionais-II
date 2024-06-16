@@ -3,6 +3,7 @@
 
 typedef unsigned logical_memory;
 typedef struct Process process;
+typedef struct List processes;
 
 struct Process
 {
@@ -18,30 +19,27 @@ struct Node
     struct Node *next;
 };
 
-struct Node *head;
-struct Node *tail;
-
-void insert(process *process)
+void insert(processes *list, process *process)
 {
     struct Node *new_node = (struct Node *)malloc(sizeof(struct Node));
     new_node->process = process;
     new_node->next = NULL;
 
-    if (head == NULL)
+    if (list->head == NULL)
     {
-        head = new_node;
-        tail = new_node;
+        list->head = new_node;
+        list->tail = new_node;
     }
     else
     {
-        tail->next = new_node;
-        tail = new_node;
+        list->tail->next = new_node;
+        list->tail = new_node;
     }
 }
 
-process *get_process(int pid)
+process *get_process(processes *list, int pid)
 {
-    struct Node *current = head;
+    struct Node *current = list->head;
     while (current != NULL)
     {
         if (current->process->pid == pid)
@@ -52,3 +50,9 @@ process *get_process(int pid)
     }
     printf("Process %d not found\n", pid);
 }
+
+struct List
+{
+    struct Node *head;
+    struct Node *tail;
+};
