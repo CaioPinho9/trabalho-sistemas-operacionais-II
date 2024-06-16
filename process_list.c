@@ -1,23 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef unsigned logical_memory;
-typedef struct Process process;
-typedef struct List processes;
-
-struct Process
-{
-    int pid;
-    int size;
-    int *page_table;
-    logical_memory *content;
-};
-
-struct Node
-{
-    struct Process *process;
-    struct Node *next;
-};
+#include "process_list.h"
 
 void insert(processes *list, process *process)
 {
@@ -37,9 +20,9 @@ void insert(processes *list, process *process)
     }
 }
 
-process *get_process(processes *list, int pid)
+process *get_process(processes *list, unsigned pid)
 {
-    struct Node *current = list->head;
+    struct Node *current = list->head->next;
     while (current != NULL)
     {
         if (current->process->pid == pid)
@@ -48,11 +31,5 @@ process *get_process(processes *list, int pid)
         }
         current = current->next;
     }
-    printf("Process %d not found\n", pid);
+    return NULL;
 }
-
-struct List
-{
-    struct Node *head;
-    struct Node *tail;
-};
