@@ -66,7 +66,6 @@ void visualize_memory(unsigned *memory_to_show, int size)
     printf("\n");
 }
 
-
 void create_process()
 {
     int pid;
@@ -123,7 +122,7 @@ void create_process()
         exit(1);
     }
 
-    // TODO: change to print content
+    visualize_memory(content, size);
 
     process *new_process = (process *)malloc(sizeof(process));
     if (new_process == NULL)
@@ -145,13 +144,15 @@ void create_process()
     printf("Process %d created with size %d\n", pid, size);
 }
 
-void visualize_page_table(unsigned int  *page_table) {
+void visualize_page_table(unsigned int *page_table)
+{
     // Print the page table in a tabular format
     printf("Page table visualization\n");
     printf("+----------------+----------------+\n");
     printf("| Logical Memory | Physical Memory |\n");
     printf("+----------------+----------------+\n");
-    for (int i = 0; i < process_size; i++) {
+    for (int i = 0; i < process_size; i++)
+    {
         printf("|      %5d      |      %5d      |\n", i, page_table[i]);
     }
     printf("+----------------+----------------+\n");
@@ -180,6 +181,12 @@ int main(int argc, char *argv[])
         exit(0);
 
     memory = (physical_memory *)malloc(memory_size);
+
+    for (unsigned i = 0; i < memory_size / sizeof(physical_memory); i++)
+    {
+        memory[i] = 0;
+    }
+
     free_frames.count = memory_size / page_size;
     free_frames.frames = (char *)malloc(free_frames.count);
 
@@ -188,9 +195,10 @@ int main(int argc, char *argv[])
     process_list->head = new_node;
     process_list->tail = new_node;
 
-    //Mocked values, remove later
+    // Mocked values, remove later
     unsigned page_table[process_size];
-    for (int i = 0; i < process_size; i++) {
+    for (int i = 0; i < process_size; i++)
+    {
         page_table[i] = rand() % 100; // Simulated page number/value
     }
 
