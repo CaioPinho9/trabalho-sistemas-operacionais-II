@@ -1,10 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 
-// byte array
-unsigned char memory;
+typedef unsigned physical_memory;
+typedef unsigned logical_memory;
+typedef unsigned page;
+
 const int MAX_SIZE = 1024;
+int page_size = 1024;
+int memory_size = 1024;
+
+// byte arrays
+physical_memory *memory;
+
+struct FreeFrames
+{
+    int count;
+    char *frames;
+};
+
+struct Process
+{
+    int pid;
+    int size;
+    int *page_table;
+    logical_memory *content;
+};
 
 void validate_input(char *name, int max_size)
 {
@@ -18,9 +40,9 @@ void validate_input(char *name, int max_size)
         printf("%s can't be more than %d bytes\n", name, MAX_SIZE);
         exit(0);
     }
-    else if (max_size % 2 != 0)
+    else if ((log2(max_size) - (int)log2(max_size)) != 0)
     {
-        printf("%s must be a multiple of 2\n", name);
+        printf("%s must be a power of 2\n", name);
         exit(0);
     }
 }
@@ -42,9 +64,11 @@ void visualize_page_table()
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    printf(argc);
+    if (argc != 3)
     {
         printf("Missing arguments\n");
+        exit(0);
     }
 
     // Initialize memory
@@ -54,7 +78,10 @@ int main(int argc, char *argv[])
     int page_size = atoi(argv[1]);
     validate_input("page", page_size);
 
-    memory = malloc(memory_size);
+    int process_size = atoi(argv[2]);
+    validate_input("process", page_size);
+
+    memory = (physical_memory *)malloc(memory_size);
 
     printf("Choose an option \n");
     printf("Visualize memory [1]\n");
