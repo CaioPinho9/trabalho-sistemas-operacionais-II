@@ -58,7 +58,7 @@ void visualize_memory(byte *memory_to_show, unsigned size)
     {
         if (i % page_size == 0)
         {
-            printf("Page %d \n", page_count);
+            printf("Page/Frame %d \n", page_count);
             page_count++;
         }
         printf("%02x ", memory_to_show[i]);
@@ -278,6 +278,8 @@ int main(int argc, char *argv[])
         if (option == 1)
         {
             visualize_memory(memory, memory_size);
+            int free = (((float)(free_frames.count * page_size) / memory_size) * 100);
+            printf("Porcentagem livre: %d\n", free);
         }
         else if (option == 2)
         {
