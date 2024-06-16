@@ -42,10 +42,26 @@ void validate_input(char *name, int max_size)
     }
 }
 
-void visualize_memory()
+void visualize_memory(unsigned *memory_to_show, int size)
 {
-    printf("Memory visualization\n");
+    printf("Memory visualization:\n\n");
+    int page_count = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (i % page_size == 0)
+        {
+            printf("Page %d \n", page_count);
+            page_count++;
+        }
+        printf("%02x ", memory_to_show[i]);
+        if ((i + 1) % page_size == 0)
+        {
+            printf("\n\n");
+        }
+    }
+    printf("\n");
 }
+
 
 void create_process()
 {
@@ -84,13 +100,14 @@ int main(int argc, char *argv[])
     printf("Visualize memory [1]\n");
     printf("Create process [2]\n");
     printf("Visualize page table [3]\n");
+    printf("Visualize process list [4]\n");
 
     int option;
     scanf("%d", &option);
 
     if (option == 1)
     {
-        visualize_memory();
+        visualize_memory(memory, memory_size);
     }
     else if (option == 2)
     {
