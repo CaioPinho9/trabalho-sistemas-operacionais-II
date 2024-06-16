@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <time.h>
 #include "process_list.h"
 
 typedef unsigned physical_memory;
@@ -68,13 +69,21 @@ void create_process()
     printf("Process creation\n");
 }
 
-void visualize_page_table()
-{
+void visualize_page_table(unsigned int  *page_table) {
+    // Print the page table in a tabular format
     printf("Page table visualization\n");
+    printf("+----------------+----------------+\n");
+    printf("| Logical Memory | Physical Memory |\n");
+    printf("+----------------+----------------+\n");
+    for (int i = 0; i < process_size; i++) {
+        printf("|      %5d      |      %5d      |\n", i, page_table[i]);
+    }
+    printf("+----------------+----------------+\n");
 }
 
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
     printf("Usage: %s <memory_size> <page_size> <process_size>\n", argv[0]);
     if (argc != 4)
     {
@@ -96,6 +105,13 @@ int main(int argc, char *argv[])
     free_frames.count = memory_size / page_size;
     free_frames.frames = (char *)malloc(free_frames.count);
 
+
+    //Mocked values, remove later
+    unsigned page_table[process_size];
+    for (int i = 0; i < process_size; i++) {
+        page_table[i] = rand() % 100; // Simulated page number/value
+    }
+
     printf("Choose an option \n");
     printf("Visualize memory [1]\n");
     printf("Create process [2]\n");
@@ -115,7 +131,7 @@ int main(int argc, char *argv[])
     }
     else if (option == 3)
     {
-        visualize_page_table();
+        visualize_page_table(page_table);
     }
     else
     {
