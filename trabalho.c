@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     validate_input("page", page_size);
 
     int process_size = atoi(argv[3]);
-    validate_input("process", page_size);
+    validate_input("process", process_size);
 
     memory = (physical_memory *)malloc(memory_size);
 
