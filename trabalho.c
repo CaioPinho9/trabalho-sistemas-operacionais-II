@@ -64,7 +64,7 @@ void visualize_page_table()
 
 int main(int argc, char *argv[])
 {
-    printf(argc);
+    printf("Usage: %s <memory_size> <page_size> <process_size>\n", argv[0]);
     if (argc != 4)
     {
         printf("Missing arguments\n");
