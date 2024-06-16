@@ -8,16 +8,8 @@ void insert(processes *list, process *process)
     new_node->process = process;
     new_node->next = NULL;
 
-    if (list->head == NULL)
-    {
-        list->head = new_node;
-        list->tail = new_node;
-    }
-    else
-    {
-        list->tail->next = new_node;
-        list->tail = new_node;
-    }
+    list->tail->next = new_node;
+    list->tail = new_node;
 }
 
 process *get_process(processes *list, unsigned pid)

@@ -5,7 +5,6 @@
 #include <time.h>
 #include "process_list.h"
 
-typedef unsigned physical_memory;
 typedef unsigned page;
 
 const unsigned MAX_SIZE = 1024;
@@ -16,15 +15,20 @@ unsigned process_size = 1024;
 processes *process_list;
 
 // byte arrays
-physical_memory *memory;
+byte *memory;
 
 struct FreeFrames
 {
     unsigned count;
-    char *frames;
+    byte *frames;
 };
 
 struct FreeFrames free_frames;
+
+int page_count(unsigned size)
+{
+    return ceil((float)size / page_size);
+}
 
 int validate_input(char *name, unsigned max_size)
 {
@@ -46,15 +50,15 @@ int validate_input(char *name, unsigned max_size)
     return 1;
 }
 
-void visualize_memory(unsigned *memory_to_show, int size)
+void visualize_memory(byte *memory_to_show, unsigned size)
 {
     printf("Memory visualization:\n\n");
-    int page_count = 0;
-    for (int i = 0; i < size; i++)
+    unsigned page_count = 0;
+    for (unsigned i = 0; i < size; i++)
     {
         if (i % page_size == 0)
         {
-            printf("Page %d \n", page_count);
+            printf("Page/Frame %d \n", page_count);
             page_count++;
         }
         printf("%02x ", memory_to_show[i]);
@@ -110,7 +114,7 @@ void create_process()
     }
 
     srand(time(NULL));
-    unsigned *content = (unsigned *)malloc(size * sizeof(unsigned));
+    byte *content = (byte *)malloc(size * sizeof(byte));
     for (int i = 0; i < size; i++)
     {
         content[i] = rand() % 100;
@@ -130,10 +134,11 @@ void create_process()
         printf("Memory allocation failed for process\n");
         exit(1);
     }
+    unsigned page_c = page_count(size);
     new_process->pid = pid;
     new_process->size = size;
     new_process->content = content;
-    new_process->page_table = (unsigned *)malloc(size / page_size * sizeof(unsigned));
+    new_process->page_table = (unsigned *)malloc(page_c * sizeof(unsigned));
     if (new_process->page_table == NULL)
     {
         printf("Memory allocation failed for page table\n");
@@ -141,21 +146,77 @@ void create_process()
     }
     insert(process_list, new_process);
 
-    printf("Process %d created with size %d\n", pid, size);
+    printf("Process %d created with size %d\n\n", pid, size);
+
+    for (byte page = 0; page < page_c; page++)
+    {
+
+        for (byte frame; frame < sizeof(free_frames.frames); frame++)
+        {
+            if (free_frames.frames[frame] == 0)
+            {
+                unsigned frame_index = frame * page_size;
+                unsigned page_index = page * page_size;
+                for (byte offset = 0; offset < page_size; offset++)
+                {
+                    memory[frame_index + offset] = content[page_index + offset];
+                }
+
+                new_process->page_table[page] = frame;
+                free_frames.frames[frame] = 1;
+                free_frames.count--;
+                break;
+            }
+        }
+    }
 }
 
-void visualize_page_table(unsigned int *page_table)
+void visualize_page_table()
 {
+    int pid;
+    process *process;
+    while (1)
+    {
+        printf("Enter the PID to visualize the page table: ");
+        scanf("%d", &pid);
+        process = get_process(process_list, pid);
+        if (process == NULL)
+        {
+            printf("Process %d does not exist\n", pid);
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+
     // Print the page table in a tabular format
     printf("Page table visualization\n");
     printf("+----------------+----------------+\n");
     printf("| Logical Memory | Physical Memory |\n");
     printf("+----------------+----------------+\n");
-    for (int i = 0; i < process_size; i++)
+    for (int i = 0; i < page_count(process->size); i++)
     {
-        printf("|      %5d      |      %5d      |\n", i, page_table[i]);
+        printf("|      %5d      |      %5d      |\n", i, process->page_table[i]);
     }
     printf("+----------------+----------------+\n");
+}
+
+void visualize_process_list()
+{
+    node *current = process_list->head->next;
+
+    printf("Process list visualization\n");
+    printf("+-----+------+------------+\n");
+    printf("| PID | Size | Page Count |\n");
+    printf("+-----+------+------------+\n");
+    while (current != NULL)
+    {
+        printf("| %3d | %4d |       %4d |\n", current->process->pid, current->process->size, page_count(current->process->size));
+        current = current->next;
+    }
+    printf("+-----+------+------------+\n");
 }
 
 int main(int argc, char *argv[])
@@ -180,15 +241,15 @@ int main(int argc, char *argv[])
     if (!validate_input("process", process_size))
         exit(0);
 
-    memory = (physical_memory *)malloc(memory_size);
+    memory = (byte *)malloc(memory_size);
 
-    for (unsigned i = 0; i < memory_size / sizeof(physical_memory); i++)
+    for (char i = 0; i < memory_size; i++)
     {
         memory[i] = 0;
     }
 
     free_frames.count = memory_size / page_size;
-    free_frames.frames = (char *)malloc(free_frames.count);
+    free_frames.frames = (byte *)malloc(free_frames.count);
 
     process_list = (processes *)malloc(sizeof(processes));
     node *new_node = (node *)malloc(sizeof(node));
@@ -202,31 +263,44 @@ int main(int argc, char *argv[])
         page_table[i] = rand() % 100; // Simulated page number/value
     }
 
-    printf("Choose an option \n");
-    printf("Visualize memory [1]\n");
-    printf("Create process [2]\n");
-    printf("Visualize page table [3]\n");
-    printf("Visualize process list [4]\n");
+    while (1)
+    {
+        printf("Choose an option \n");
+        printf("Visualize memory [1]\n");
+        printf("Create process [2]\n");
+        printf("Visualize page table [3]\n");
+        printf("Visualize process list [4]\n");
+        printf("Exit [5]\n");
 
-    int option;
-    scanf("%d", &option);
+        int option;
+        scanf("%d", &option);
 
-    if (option == 1)
-    {
-        visualize_memory(memory, memory_size);
+        if (option == 1)
+        {
+            visualize_memory(memory, memory_size);
+            int free = (((float)(free_frames.count * page_size) / memory_size) * 100);
+            printf("Porcentagem livre: %d\n", free);
+        }
+        else if (option == 2)
+        {
+            create_process();
+        }
+        else if (option == 3)
+        {
+            visualize_page_table();
+        }
+        else if (option == 4)
+        {
+            visualize_process_list();
+        }
+        else if (option == 5)
+        {
+            break;
+        }
+        else
+        {
+            printf("Invalid option\n");
+        }
     }
-    else if (option == 2)
-    {
-        create_process();
-    }
-    else if (option == 3)
-    {
-        visualize_page_table(page_table);
-    }
-    else
-    {
-        printf("Invalid option\n");
-    }
-
     return 0;
 }
