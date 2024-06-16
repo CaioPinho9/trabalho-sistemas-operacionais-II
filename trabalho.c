@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include "process_list.h"
 
 typedef unsigned physical_memory;
-typedef unsigned logical_memory;
 typedef unsigned page;
 
 const int MAX_SIZE = 1024;
 int page_size = 1024;
 int memory_size = 1024;
+int process_size = 1024;
 
 // byte arrays
 physical_memory *memory;
@@ -20,13 +21,7 @@ struct FreeFrames
     char *frames;
 };
 
-struct Process
-{
-    int pid;
-    int size;
-    int *page_table;
-    logical_memory *content;
-};
+struct FreeFrames free_frames;
 
 void validate_input(char *name, int max_size)
 {
@@ -72,16 +67,18 @@ int main(int argc, char *argv[])
     }
 
     // Initialize memory
-    int memory_size = atoi(argv[1]);
+    memory_size = atoi(argv[1]);
     validate_input("memory", memory_size);
 
-    int page_size = atoi(argv[2]);
+    page_size = atoi(argv[2]);
     validate_input("page", page_size);
 
-    int process_size = atoi(argv[3]);
+    process_size = atoi(argv[3]);
     validate_input("process", process_size);
 
     memory = (physical_memory *)malloc(memory_size);
+    free_frames.count = memory_size / page_size;
+    free_frames.frames = (char *)malloc(free_frames.count);
 
     printf("Choose an option \n");
     printf("Visualize memory [1]\n");
