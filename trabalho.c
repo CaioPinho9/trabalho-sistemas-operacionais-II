@@ -65,20 +65,20 @@ void visualize_page_table()
 int main(int argc, char *argv[])
 {
     printf(argc);
-    if (argc != 3)
+    if (argc != 4)
     {
         printf("Missing arguments\n");
         exit(0);
     }
 
     // Initialize memory
-    int memory_size = atoi(argv[0]);
+    int memory_size = atoi(argv[1]);
     validate_input("memory", memory_size);
 
-    int page_size = atoi(argv[1]);
+    int page_size = atoi(argv[2]);
     validate_input("page", page_size);
 
-    int process_size = atoi(argv[2]);
+    int process_size = atoi(argv[3]);
     validate_input("process", page_size);
 
     memory = (physical_memory *)malloc(memory_size);
