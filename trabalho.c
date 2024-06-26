@@ -21,6 +21,7 @@ struct FreeFrames
 {
     unsigned count;
     byte *frames;
+    size_t allocated_size;
 };
 
 struct FreeFrames free_frames;
@@ -69,7 +70,6 @@ void visualize_memory(byte *memory_to_show, unsigned size)
     }
     printf("\n");
 }
-
 void create_process()
 {
     int pid;
@@ -114,16 +114,16 @@ void create_process()
     }
 
     srand(time(NULL));
-    byte *content = (byte *)malloc(size * sizeof(byte));
-    for (int i = 0; i < size; i++)
-    {
-        content[i] = rand() % 100;
-    }
-
+    byte *content = (byte *)malloc(size);
     if (content == NULL)
     {
         printf("Memory allocation failed for process content\n");
         exit(1);
+    }
+
+    for (int i = 0; i < size; i++)
+    {
+        content[i] = rand() % 100;
     }
 
     visualize_memory(content, size);
@@ -134,6 +134,7 @@ void create_process()
         printf("Memory allocation failed for process\n");
         exit(1);
     }
+
     unsigned page_c = page_count(size);
     new_process->pid = pid;
     new_process->size = size;
@@ -151,19 +152,21 @@ void create_process()
     for (byte page = 0; page < page_c; page++)
     {
 
-        for (byte frame; frame < sizeof(free_frames.frames); frame++)
+        unsigned start_point = rand() % free_frames.allocated_size;
+        for (byte frame; frame < free_frames.allocated_size; frame++)
         {
-            if (free_frames.frames[frame] == 0)
+            unsigned frame_cursor = (start_point + frame) % free_frames.allocated_size;
+            if (free_frames.frames[frame_cursor] == 0)
             {
-                unsigned frame_index = frame * page_size;
+                unsigned frame_index = frame_cursor * page_size;
                 unsigned page_index = page * page_size;
                 for (byte offset = 0; offset < page_size; offset++)
                 {
                     memory[frame_index + offset] = content[page_index + offset];
                 }
 
-                new_process->page_table[page] = frame;
-                free_frames.frames[frame] = 1;
+                new_process->page_table[page] = frame_cursor;
+                free_frames.frames[frame_cursor] = 1;
                 free_frames.count--;
                 break;
             }
@@ -183,7 +186,7 @@ void visualize_page_table()
         if (process == NULL)
         {
             printf("Process %d does not exist\n", pid);
-            continue;
+            return;
         }
         else
         {
@@ -248,7 +251,8 @@ int main(int argc, char *argv[])
         memory[i] = 0;
     }
 
-    free_frames.count = memory_size / page_size;
+    free_frames.count = page_count(memory_size);
+    free_frames.allocated_size = free_frames.count;
     free_frames.frames = (byte *)malloc(free_frames.count);
 
     process_list = (processes *)malloc(sizeof(processes));
